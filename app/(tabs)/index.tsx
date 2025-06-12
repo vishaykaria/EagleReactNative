@@ -270,68 +270,68 @@ export default function HomeScreen() {
 
   const toggleIrsFormsAccordion = (accountId: string) => {
     const animations = initializeAnimations(accountId);
-    const isExpanding = expandedIrsForm !== accountId;
+    const isCurrentlyExpanded = expandedIrsForm === accountId;
     
-    // Close any currently expanded form
-    if (expandedIrsForm && expandedIrsForm !== accountId) {
-      const prevAnimations = initializeAnimations(expandedIrsForm);
+    if (isCurrentlyExpanded) {
+      // Collapse the current accordion
+      setExpandedIrsForm(null);
       Animated.parallel([
-        Animated.timing(prevAnimations.height, {
+        Animated.timing(animations.height, {
           toValue: 0,
           duration: 300,
-          useNativeDriver: false, // Height animations cannot use native driver
+          useNativeDriver: false,
         }),
-        Animated.timing(prevAnimations.opacity, {
+        Animated.timing(animations.opacity, {
           toValue: 0,
           duration: 300,
-          useNativeDriver: false, // Keep consistent with height animation
+          useNativeDriver: false,
         }),
-        Animated.timing(prevAnimations.chevronRotation, {
+        Animated.timing(animations.chevronRotation, {
           toValue: 0,
           duration: 300,
-          useNativeDriver: false, // Keep consistent with other animations
+          useNativeDriver: false,
         }),
       ]).start();
-    }
+    } else {
+      // Close any currently expanded form first
+      if (expandedIrsForm) {
+        const prevAnimations = initializeAnimations(expandedIrsForm);
+        Animated.parallel([
+          Animated.timing(prevAnimations.height, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: false,
+          }),
+          Animated.timing(prevAnimations.opacity, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: false,
+          }),
+          Animated.timing(prevAnimations.chevronRotation, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: false,
+          }),
+        ]).start();
+      }
 
-    if (isExpanding) {
+      // Expand the new accordion
       setExpandedIrsForm(accountId);
-      // Expand IRS forms accordion
       Animated.parallel([
         Animated.timing(animations.height, {
           toValue: 140,
           duration: 300,
-          useNativeDriver: false, // Height animations cannot use native driver
+          useNativeDriver: false,
         }),
         Animated.timing(animations.opacity, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: false, // Keep consistent with height animation
+          useNativeDriver: false,
         }),
         Animated.timing(animations.chevronRotation, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: false, // Keep consistent with other animations
-        }),
-      ]).start();
-    } else {
-      setExpandedIrsForm(null);
-      // Collapse IRS forms accordion
-      Animated.parallel([
-        Animated.timing(animations.height, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: false, // Height animations cannot use native driver
-        }),
-        Animated.timing(animations.opacity, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: false, // Keep consistent with height animation
-        }),
-        Animated.timing(animations.chevronRotation, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: false, // Keep consistent with other animations
+          useNativeDriver: false,
         }),
       ]).start();
     }
