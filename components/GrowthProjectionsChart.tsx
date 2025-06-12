@@ -66,11 +66,11 @@ export function GrowthProjectionsChart({
       graphHeight = 150;
     } else if (screenWidth <= 430) {
       // iPhone 16 Plus, iPhone 14/15 Pro Max - 20% narrower
-      graphWidth = Math.min(244, maxAvailableWidth); // 305 * 0.8 = 244
+      graphWidth = Math.min(244, maxAvailableWidth); // 305 * 0.8 = 144
       graphHeight = 160;
     } else {
       // Larger screens (tablets, etc.) - 20% narrower
-      graphWidth = Math.min(272, maxAvailableWidth); // 340 * 0.8 = 272
+      graphWidth = Math.min(272, maxAvailableWidth); // 340 * 0.8 = 120
       graphHeight = 170;
     }
     
