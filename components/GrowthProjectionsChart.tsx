@@ -40,49 +40,49 @@ export function GrowthProjectionsChart({
   const [screenData, setScreenData] = useState(Dimensions.get('window'));
   const { convertToUSD } = useCurrencyConverter();
 
-  // Use exact same dimensions calculation as PerformanceGraph but with wider container
+  // Use EXACT same dimensions calculation as PerformanceGraph
   const calculateGraphDimensions = () => {
     const { width: screenWidth } = screenData;
     
     // Reduced Y-axis width and increased left margin for better centering
     const yAxisWidth = 15; // Reduced from 20
-    const containerHorizontalPadding = 20; // Reduced from 40 to make container wider
+    const containerHorizontalPadding = 40; // SAME as PerformanceGraph
     const leftMargin = 30; // Increased left margin to shift graph right
     const rightMargin = 20; // Slightly increased right margin
     
     // Calculate maximum available width for the graph
     const maxAvailableWidth = screenWidth - containerHorizontalPadding - yAxisWidth - leftMargin - rightMargin;
     
-    // Set responsive dimensions
+    // Set responsive dimensions - EXACT same as PerformanceGraph
     let graphWidth, graphHeight;
     
     if (screenWidth <= 375) {
       // Small phones (iPhone SE, etc.)
-      graphWidth = Math.min(280, maxAvailableWidth); // Increased from 240
+      graphWidth = Math.min(240, maxAvailableWidth); // SAME as PerformanceGraph
       graphHeight = 140;
     } else if (screenWidth <= 393) {
       // iPhone 16, iPhone 14/15 Pro
-      graphWidth = Math.min(315, maxAvailableWidth); // Increased from 275
+      graphWidth = Math.min(275, maxAvailableWidth); // SAME as PerformanceGraph
       graphHeight = 150;
     } else if (screenWidth <= 430) {
       // iPhone 16 Plus, iPhone 14/15 Pro Max
-      graphWidth = Math.min(345, maxAvailableWidth); // Increased from 305
+      graphWidth = Math.min(305, maxAvailableWidth); // SAME as PerformanceGraph
       graphHeight = 160;
     } else {
       // Larger screens (tablets, etc.)
-      graphWidth = Math.min(380, maxAvailableWidth); // Increased from 340
+      graphWidth = Math.min(340, maxAvailableWidth); // SAME as PerformanceGraph
       graphHeight = 170;
     }
     
-    // Ensure minimum viable size
-    graphWidth = Math.max(270, graphWidth); // Increased from 230
+    // Ensure minimum viable size - SAME as PerformanceGraph
+    graphWidth = Math.max(230, graphWidth); // SAME as PerformanceGraph
     graphHeight = Math.max(130, graphHeight);
     
     return {
       width: graphWidth,
       height: graphHeight,
       yAxisWidth,
-      containerPadding: 10, // Reduced from 20 to make container wider
+      containerPadding: 20, // SAME as PerformanceGraph
       leftMargin,
       rightMargin,
       graphPadding: 4
