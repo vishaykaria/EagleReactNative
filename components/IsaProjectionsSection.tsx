@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Calculator, TrendingUp, TrendingDown, Target, Calendar, DollarSign, PiggyBank, Users, Clock, ChartLine as LineChart } from 'lucide-react-native';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
+import { GrowthProjectionsChart } from './GrowthProjectionsChart';
 
 interface IsaProjectionsSectionProps {
   balanceVisible: boolean;
@@ -128,6 +129,17 @@ export function IsaProjectionsSection({
   // Projections View Component
   const ProjectionsView = () => (
     <View style={styles.projectionsContainer}>
+      {/* Interactive Growth Chart */}
+      <GrowthProjectionsChart
+        accountType="isa"
+        balanceVisible={balanceVisible}
+        currentValue={currentValue}
+        monthlyContribution={monthlyContribution}
+        currentAge={calculatorInputs.currentAge}
+        targetAge={calculatorInputs.targetAge}
+        annualAllowance={annualAllowance}
+      />
+
       {/* Key Metrics */}
       <View style={styles.metricsGrid}>
         <View style={styles.metricCard}>
@@ -159,26 +171,6 @@ export function IsaProjectionsSection({
           <Text style={styles.metricValue}>
             {balanceVisible ? `£${totalGains.toLocaleString('en-GB')}` : '••••••'}
           </Text>
-        </View>
-      </View>
-
-      {/* Projection Chart */}
-      <View style={styles.chartSection}>
-        <Text style={styles.sectionTitle}>Growth Projection</Text>
-        <View style={styles.chartContainer}>
-          {balanceVisible ? (
-            <View style={styles.chartPlaceholder}>
-              <LineChart size={48} color="#059669" />
-              <Text style={styles.chartText}>Interactive chart showing ISA growth over time</Text>
-              <Text style={styles.chartSubtext}>
-                From £{currentValue.toLocaleString('en-GB')} today to £{projectionData[projectionData.length - 1]?.balance.toLocaleString('en-GB')} in 25 years
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.hiddenChart}>
-              <Text style={styles.hiddenText}>Projection data hidden</Text>
-            </View>
-          )}
         </View>
       </View>
 

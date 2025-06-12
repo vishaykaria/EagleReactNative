@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'reac
 import { Calculator, TrendingUp, TrendingDown, Target, Calendar, DollarSign, PiggyBank, Users, Clock } from 'lucide-react-native';
 import Svg, { Path, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
+import { GrowthProjectionsChart } from './GrowthProjectionsChart';
 
 interface RetirementSectionProps {
   balanceVisible: boolean;
@@ -116,6 +117,17 @@ export function RetirementSection({
   // Projections View Component
   const ProjectionsView = () => (
     <View style={styles.projectionsContainer}>
+      {/* Interactive Growth Chart */}
+      <GrowthProjectionsChart
+        accountType="sipp"
+        balanceVisible={balanceVisible}
+        currentValue={currentValue}
+        monthlyContribution={monthlyContribution}
+        currentAge={calculatorInputs.currentAge}
+        targetAge={calculatorInputs.retirementAge}
+        employerContribution={employerContribution}
+      />
+
       {/* Key Metrics */}
       <View style={styles.metricsGrid}>
         <View style={styles.metricCard}>
@@ -142,26 +154,6 @@ export function RetirementSection({
           <Text style={styles.metricValue}>
             {balanceVisible ? `£${(projectedValue * 0.04 / 12).toLocaleString('en-GB')}` : '••••••'}
           </Text>
-        </View>
-      </View>
-
-      {/* Projection Chart */}
-      <View style={styles.chartSection}>
-        <Text style={styles.sectionTitle}>Growth Projection</Text>
-        <View style={styles.chartContainer}>
-          {balanceVisible ? (
-            <View style={styles.chartPlaceholder}>
-              <TrendingUp size={48} color="#7C3AED" />
-              <Text style={styles.chartText}>Interactive chart showing projected growth over time</Text>
-              <Text style={styles.chartSubtext}>
-                From £{currentValue.toLocaleString('en-GB')} today to £{projectedValue.toLocaleString('en-GB')} at retirement
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.hiddenChart}>
-              <Text style={styles.hiddenText}>Projection data hidden</Text>
-            </View>
-          )}
         </View>
       </View>
 
