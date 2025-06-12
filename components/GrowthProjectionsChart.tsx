@@ -75,7 +75,7 @@ export function GrowthProjectionsChart({
     }
     
     // Ensure minimum viable size - 20% narrower
-    graphWidth = Math.max(184, graphWidth); // 230 * 0.8 = 184
+    graphWidth = Math.max(184, graphWidth); // 230 * 0.8 = 120
     graphHeight = Math.max(130, graphHeight);
     
     return {
