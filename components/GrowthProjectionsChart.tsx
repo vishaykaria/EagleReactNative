@@ -40,7 +40,7 @@ export function GrowthProjectionsChart({
   const [screenData, setScreenData] = useState(Dimensions.get('window'));
   const { convertToUSD } = useCurrencyConverter();
 
-  // Calculate dimensions - 15% narrower than PerformanceGraph
+  // Calculate dimensions - 20% narrower than PerformanceGraph
   const calculateGraphDimensions = () => {
     const { width: screenWidth } = screenData;
     
@@ -53,29 +53,29 @@ export function GrowthProjectionsChart({
     // Calculate maximum available width for the graph
     const maxAvailableWidth = screenWidth - containerHorizontalPadding - yAxisWidth - leftMargin - rightMargin;
     
-    // Set responsive dimensions - 15% narrower than PerformanceGraph
+    // Set responsive dimensions - 20% narrower than PerformanceGraph
     let graphWidth, graphHeight;
     
     if (screenWidth <= 375) {
-      // Small phones (iPhone SE, etc.) - 15% narrower
-      graphWidth = Math.min(204, maxAvailableWidth); // 240 * 0.85 = 204
+      // Small phones (iPhone SE, etc.) - 20% narrower
+      graphWidth = Math.min(192, maxAvailableWidth); // 240 * 0.8 = 192
       graphHeight = 140;
     } else if (screenWidth <= 393) {
-      // iPhone 16, iPhone 14/15 Pro - 15% narrower
-      graphWidth = Math.min(234, maxAvailableWidth); // 275 * 0.85 = 234
+      // iPhone 16, iPhone 14/15 Pro - 20% narrower
+      graphWidth = Math.min(220, maxAvailableWidth); // 275 * 0.8 = 220
       graphHeight = 150;
     } else if (screenWidth <= 430) {
-      // iPhone 16 Plus, iPhone 14/15 Pro Max - 15% narrower
-      graphWidth = Math.min(259, maxAvailableWidth); // 305 * 0.85 = 259
+      // iPhone 16 Plus, iPhone 14/15 Pro Max - 20% narrower
+      graphWidth = Math.min(244, maxAvailableWidth); // 305 * 0.8 = 244
       graphHeight = 160;
     } else {
-      // Larger screens (tablets, etc.) - 15% narrower
-      graphWidth = Math.min(289, maxAvailableWidth); // 340 * 0.85 = 289
+      // Larger screens (tablets, etc.) - 20% narrower
+      graphWidth = Math.min(272, maxAvailableWidth); // 340 * 0.8 = 272
       graphHeight = 170;
     }
     
-    // Ensure minimum viable size - 15% narrower
-    graphWidth = Math.max(196, graphWidth); // 230 * 0.85 = 196
+    // Ensure minimum viable size - 20% narrower
+    graphWidth = Math.max(184, graphWidth); // 230 * 0.8 = 184
     graphHeight = Math.max(130, graphHeight);
     
     return {
