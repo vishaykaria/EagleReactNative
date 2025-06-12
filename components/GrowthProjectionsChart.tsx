@@ -40,49 +40,49 @@ export function GrowthProjectionsChart({
   const [screenData, setScreenData] = useState(Dimensions.get('window'));
   const { convertToUSD } = useCurrencyConverter();
 
-  // Use EXACT same dimensions calculation as PerformanceGraph
+  // Calculate dimensions - 15% narrower than PerformanceGraph
   const calculateGraphDimensions = () => {
     const { width: screenWidth } = screenData;
     
-    // Reduced Y-axis width and increased left margin for better centering
-    const yAxisWidth = 15; // Reduced from 20
-    const containerHorizontalPadding = 40; // SAME as PerformanceGraph
-    const leftMargin = 30; // Increased left margin to shift graph right
-    const rightMargin = 20; // Slightly increased right margin
+    // Y-axis configuration for better visibility
+    const yAxisWidth = 45; // Increased from 15 to 45 for better visibility
+    const containerHorizontalPadding = 40;
+    const leftMargin = 10; // Reduced from 30 to 10 to give more space for Y-axis
+    const rightMargin = 20;
     
     // Calculate maximum available width for the graph
     const maxAvailableWidth = screenWidth - containerHorizontalPadding - yAxisWidth - leftMargin - rightMargin;
     
-    // Set responsive dimensions - EXACT same as PerformanceGraph
+    // Set responsive dimensions - 15% narrower than PerformanceGraph
     let graphWidth, graphHeight;
     
     if (screenWidth <= 375) {
-      // Small phones (iPhone SE, etc.)
-      graphWidth = Math.min(240, maxAvailableWidth); // SAME as PerformanceGraph
+      // Small phones (iPhone SE, etc.) - 15% narrower
+      graphWidth = Math.min(204, maxAvailableWidth); // 240 * 0.85 = 204
       graphHeight = 140;
     } else if (screenWidth <= 393) {
-      // iPhone 16, iPhone 14/15 Pro
-      graphWidth = Math.min(275, maxAvailableWidth); // SAME as PerformanceGraph
+      // iPhone 16, iPhone 14/15 Pro - 15% narrower
+      graphWidth = Math.min(234, maxAvailableWidth); // 275 * 0.85 = 234
       graphHeight = 150;
     } else if (screenWidth <= 430) {
-      // iPhone 16 Plus, iPhone 14/15 Pro Max
-      graphWidth = Math.min(305, maxAvailableWidth); // SAME as PerformanceGraph
+      // iPhone 16 Plus, iPhone 14/15 Pro Max - 15% narrower
+      graphWidth = Math.min(259, maxAvailableWidth); // 305 * 0.85 = 259
       graphHeight = 160;
     } else {
-      // Larger screens (tablets, etc.)
-      graphWidth = Math.min(340, maxAvailableWidth); // SAME as PerformanceGraph
+      // Larger screens (tablets, etc.) - 15% narrower
+      graphWidth = Math.min(289, maxAvailableWidth); // 340 * 0.85 = 289
       graphHeight = 170;
     }
     
-    // Ensure minimum viable size - SAME as PerformanceGraph
-    graphWidth = Math.max(230, graphWidth); // SAME as PerformanceGraph
+    // Ensure minimum viable size - 15% narrower
+    graphWidth = Math.max(196, graphWidth); // 230 * 0.85 = 196
     graphHeight = Math.max(130, graphHeight);
     
     return {
       width: graphWidth,
       height: graphHeight,
       yAxisWidth,
-      containerPadding: 20, // SAME as PerformanceGraph
+      containerPadding: 20,
       leftMargin,
       rightMargin,
       graphPadding: 4
@@ -409,7 +409,7 @@ export function GrowthProjectionsChart({
           </View>
           
           <View style={[styles.graphContainer, { paddingHorizontal: containerPadding }]}>
-            {/* Y-axis labels - same as PerformanceGraph */}
+            {/* Y-axis labels - improved visibility */}
             <View style={[styles.yAxisLabels, { width: yAxisWidth, height: GRAPH_HEIGHT, marginLeft: leftMargin }]}>
               {gridLines.map((line, index) => (
                 <Text 
