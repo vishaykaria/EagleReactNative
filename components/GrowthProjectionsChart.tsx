@@ -40,56 +40,10 @@ export function GrowthProjectionsChart({
   const [screenData, setScreenData] = useState(Dimensions.get('window'));
   const { convertToUSD } = useCurrencyConverter();
 
-  // Calculate dimensions - 20% narrower than PerformanceGraph
-  const calculateGraphDimensions = () => {
-    const { width: screenWidth } = screenData;
-    
-    // Y-axis configuration for better visibility
-    const yAxisWidth = 45; // Increased from 15 to 45 for better visibility
-    const containerHorizontalPadding = 40;
-    const leftMargin = 10; // Reduced from 30 to 10 to give more space for Y-axis
-    const rightMargin = 20;
-    
-    // Calculate maximum available width for the graph
-    const maxAvailableWidth = screenWidth - containerHorizontalPadding - yAxisWidth - leftMargin - rightMargin;
-    
-    // Set responsive dimensions - 20% narrower than PerformanceGraph
-    let graphWidth, graphHeight;
-    
-    if (screenWidth <= 375) {
-      // Small phones (iPhone SE, etc.) - 20% narrower
-      graphWidth = Math.min(192, maxAvailableWidth); // 240 * 0.8 = 192
-      graphHeight = 140;
-    } else if (screenWidth <= 393) {
-      // iPhone 16, iPhone 14/15 Pro - 20% narrower
-      graphWidth = Math.min(220, maxAvailableWidth); // 275 * 0.8 = 120
-      graphHeight = 150;
-    } else if (screenWidth <= 430) {
-      // iPhone 16 Plus, iPhone 14/15 Pro Max - 20% narrower
-      graphWidth = Math.min(244, maxAvailableWidth); // 305 * 0.8 = 144
-      graphHeight = 160;
-    } else {
-      // Larger screens (tablets, etc.) - 20% narrower
-      graphWidth = Math.min(272, maxAvailableWidth); // 340 * 0.8 = 120
-      graphHeight = 170;
-    }
-    
-    // Ensure minimum viable size - 20% narrower
-    graphWidth = Math.max(184, graphWidth); // 230 * 0.8 = 120
-    graphHeight = Math.max(130, graphHeight);
-    
-    return {
-      width: graphWidth,
-      height: graphHeight,
-      yAxisWidth,
-      containerPadding: 20,
-      leftMargin,
-      rightMargin,
-      graphPadding: 4
-    };
-  };
-
-  const { width: GRAPH_WIDTH, height: GRAPH_HEIGHT, yAxisWidth, containerPadding, leftMargin, rightMargin, graphPadding } = calculateGraphDimensions();
+  // Chart dimensions - matching Regional Allocation container width
+  const GRAPH_WIDTH = Math.min(screenData.width - 80, 340);
+  const GRAPH_HEIGHT = 200;
+  const GRAPH_PADDING = 20;
 
   // Projection scenarios
   const scenarios = {
@@ -172,51 +126,25 @@ export function GrowthProjectionsChart({
 
   const projectionData = generateProjectionData();
 
-  // Calculate chart scaling - use same approach as PerformanceGraph
+  // Calculate chart scaling
   const allValues = projectionData.flatMap(d => [d.pessimistic, d.average, d.outperform]);
   const minValue = Math.min(...allValues, currentValue);
   const maxValue = Math.max(...allValues);
-  
-  // Create simplified Y-axis with round numbers in increments
-  const createSimplifiedYAxis = () => {
-    const roundedMin = Math.floor(minValue / 10000) * 10000; // Round to nearest 10k
-    const roundedMax = Math.ceil(maxValue / 10000) * 10000;
-    
-    const range = Math.max(roundedMax - roundedMin, 20000);
-    const adjustedMin = roundedMin;
-    const adjustedMax = adjustedMin + range;
-    
-    const gridValues = [];
-    const increment = Math.max(10000, Math.ceil((adjustedMax - adjustedMin) / 5 / 10000) * 10000);
-    
-    for (let value = adjustedMin; value <= adjustedMax; value += increment) {
-      gridValues.push(value);
-    }
-    
-    return {
-      min: adjustedMin,
-      max: adjustedMax,
-      range: adjustedMax - adjustedMin,
-      gridValues
-    };
-  };
+  const valueRange = maxValue - minValue;
+  const padding = valueRange * 0.1; // 10% padding
 
-  const yAxisConfig = createSimplifiedYAxis();
+  const chartMinValue = Math.max(0, minValue - padding);
+  const chartMaxValue = maxValue + padding;
+  const chartRange = chartMaxValue - chartMinValue;
 
-  // Calculate average performance for header
-  const finalProjections = projectionData[projectionData.length - 1];
-  const avgGrowth = ((finalProjections.average - currentValue) / currentValue) * 100 / (targetAge - currentAge);
-
-  // Generate line chart data points with optimized spacing - same as PerformanceGraph
+  // Generate line data points
   const generateLineData = () => {
     return projectionData.map((point, index) => {
-      // Add padding to ensure all points are fully visible
-      const effectiveWidth = GRAPH_WIDTH - (graphPadding * 4); // Increased padding
-      const x = graphPadding * 2 + (index / (projectionData.length - 1)) * effectiveWidth;
+      const x = GRAPH_PADDING + (index / (projectionData.length - 1)) * (GRAPH_WIDTH - 2 * GRAPH_PADDING);
       
-      const pessimisticY = GRAPH_HEIGHT - ((point.pessimistic - yAxisConfig.min) / yAxisConfig.range) * GRAPH_HEIGHT;
-      const averageY = GRAPH_HEIGHT - ((point.average - yAxisConfig.min) / yAxisConfig.range) * GRAPH_HEIGHT;
-      const outperformY = GRAPH_HEIGHT - ((point.outperform - yAxisConfig.min) / yAxisConfig.range) * GRAPH_HEIGHT;
+      const pessimisticY = GRAPH_HEIGHT - ((point.pessimistic - chartMinValue) / chartRange) * GRAPH_HEIGHT;
+      const averageY = GRAPH_HEIGHT - ((point.average - chartMinValue) / chartRange) * GRAPH_HEIGHT;
+      const outperformY = GRAPH_HEIGHT - ((point.outperform - chartMinValue) / chartRange) * GRAPH_HEIGHT;
 
       return {
         x,
@@ -235,7 +163,7 @@ export function GrowthProjectionsChart({
 
   const lineData = generateLineData();
 
-  // Generate smooth curved SVG path - same as PerformanceGraph
+  // Generate smooth SVG path
   const generateSmoothPath = (points: { x: number; y: number }[]) => {
     if (points.length === 0) return '';
     if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
@@ -246,7 +174,7 @@ export function GrowthProjectionsChart({
       const current = points[i];
       const previous = points[i - 1];
       
-      const tension = 0.15;
+      const tension = 0.2;
       
       if (i === 1) {
         const next = points[i + 1] || current;
@@ -285,15 +213,544 @@ export function GrowthProjectionsChart({
   const averagePath = generateSmoothPath(lineData.map(d => ({ x: d.x, y: d.averageY })));
   const outperformPath = generateSmoothPath(lineData.map(d => ({ x: d.x, y: d.outperformY })));
 
-  // Generate grid lines - same format as PerformanceGraph
-  const gridLines = yAxisConfig.gridValues.map(value => {
-    const y = GRAPH_HEIGHT - ((value - yAxisConfig.min) / yAxisConfig.range) * GRAPH_HEIGHT;
-    return { y, value: (value / 1000).toString(), label: `£${(value / 1000).toFixed(0)}k` };
-  });
+  // Generate Y-axis grid lines
+  const generateGridLines = () => {
+    const gridCount = 5;
+    const gridLines = [];
+    
+    for (let i = 0; i <= gridCount; i++) {
+      const value = chartMinValue + (chartRange * i / gridCount);
+      const y = GRAPH_HEIGHT - (i / gridCount) * GRAPH_HEIGHT;
+      
+      gridLines.push({
+        y,
+        value: value / 1000, // Convert to thousands for display
+        label: `£${(value / 1000).toFixed(0)}k`
+      });
+    }
+    
+    return gridLines;
+  };
 
-  const accountColor = accountType === 'isa' ? '#059669' : '#7C3AED';
+  const gridLines = generateGridLines();
 
-  // Create pan responder for touch interactions - same as PerformanceGraph
+  // Touch handling
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
-    onMoveShouldSe
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (event) => {
+      const { locationX, locationY } = event.nativeEvent;
+      handleTouch(locationX, locationY);
+    },
+    onPanResponderMove: (event) => {
+      const { locationX, locationY } = event.nativeEvent;
+      handleTouch(locationX, locationY);
+    },
+    onPanResponderRelease: () => {
+      setHoveredPoint(null);
+      setSelectedScenario(null);
+      setTouchPosition(null);
+    },
+  });
+
+  const handleTouch = (x: number, y: number) => {
+    // Find closest data point
+    let closestIndex = 0;
+    let closestDistance = Math.abs(lineData[0].x - x);
+    
+    lineData.forEach((point, index) => {
+      const distance = Math.abs(point.x - x);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    if (closestDistance < 30) {
+      setHoveredPoint(closestIndex);
+      setTouchPosition({ x, y });
+      
+      // Determine which line is closest to touch point
+      const point = lineData[closestIndex];
+      const distances = {
+        pessimistic: Math.abs(point.pessimisticY - y),
+        average: Math.abs(point.averageY - y),
+        outperform: Math.abs(point.outperformY - y)
+      };
+      
+      const closestScenario = Object.entries(distances).reduce((a, b) => 
+        distances[a[0] as keyof typeof distances] < distances[b[0] as keyof typeof distances] ? a : b
+      )[0] as keyof typeof distances;
+      
+      if (distances[closestScenario] < 40) {
+        setSelectedScenario(closestScenario);
+      }
+    }
+  };
+
+  // Calculate key metrics
+  const finalProjections = projectionData[projectionData.length - 1];
+  const totalContributions = finalProjections.contributions;
+  
+  const gains = {
+    pessimistic: finalProjections.pessimistic - totalContributions,
+    average: finalProjections.average - totalContributions,
+    outperform: finalProjections.outperform - totalContributions
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Growth Projections</Text>
+        <View style={styles.headerInfo}>
+          <Info size={16} color="#64748B" />
+          <Text style={styles.headerSubtext}>Tap lines to explore scenarios</Text>
+        </View>
+      </View>
+
+      {/* Key Metrics */}
+      <View style={styles.metricsContainer}>
+        <View style={styles.metricCard}>
+          <Text style={styles.metricLabel}>Current Value</Text>
+          <Text style={styles.metricValue}>
+            {balanceVisible ? `£${currentValue.toLocaleString('en-GB')}` : '••••••'}
+          </Text>
+        </View>
+        <View style={styles.metricCard}>
+          <Text style={styles.metricLabel}>Target Age</Text>
+          <Text style={styles.metricValue}>{targetAge}</Text>
+        </View>
+        <View style={styles.metricCard}>
+          <Text style={styles.metricLabel}>Years to Go</Text>
+          <Text style={styles.metricValue}>{targetAge - currentAge}</Text>
+        </View>
+      </View>
+
+      {/* Chart */}
+      {balanceVisible ? (
+        <View style={styles.chartSection}>
+          <View style={styles.interactionHintContainer}>
+            <Text style={styles.interactionHint}>Tap and hold data points to see values</Text>
+          </View>
+          
+          <View style={styles.chartContainer}>
+            {/* Y-axis labels */}
+            <View style={styles.yAxisContainer}>
+              {gridLines.map((line, index) => (
+                <Text key={index} style={[styles.yAxisLabel, { top: line.y - 8 }]}>
+                  {line.label}
+                </Text>
+              ))}
+            </View>
+
+            {/* Chart area */}
+            <View style={[styles.chartArea, { width: GRAPH_WIDTH, height: GRAPH_HEIGHT }]}>
+              <View 
+                style={styles.touchArea}
+                {...panResponder.panHandlers}
+              >
+                <Svg width={GRAPH_WIDTH} height={GRAPH_HEIGHT}>
+                  <Defs>
+                    <LinearGradient id="pessimisticGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <Stop offset="0%" stopColor={scenarios.pessimistic.color} stopOpacity="0.1" />
+                      <Stop offset="100%" stopColor={scenarios.pessimistic.color} stopOpacity="0.02" />
+                    </LinearGradient>
+                    <LinearGradient id="averageGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <Stop offset="0%" stopColor={scenarios.average.color} stopOpacity="0.1" />
+                      <Stop offset="100%" stopColor={scenarios.average.color} stopOpacity="0.02" />
+                    </LinearGradient>
+                    <LinearGradient id="outperformGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <Stop offset="0%" stopColor={scenarios.outperform.color} stopOpacity="0.1" />
+                      <Stop offset="100%" stopColor={scenarios.outperform.color} stopOpacity="0.02" />
+                    </LinearGradient>
+                  </Defs>
+
+                  {/* Grid lines */}
+                  {gridLines.map((line, index) => (
+                    <Line
+                      key={index}
+                      x1={GRAPH_PADDING}
+                      y1={line.y}
+                      x2={GRAPH_WIDTH - GRAPH_PADDING}
+                      y2={line.y}
+                      stroke="#F1F5F9"
+                      strokeWidth="1"
+                    />
+                  ))}
+
+                  {/* Projection lines */}
+                  <Path
+                    d={pessimisticPath}
+                    stroke={scenarios.pessimistic.color}
+                    strokeWidth={selectedScenario === 'pessimistic' ? 3 : 2}
+                    fill="none"
+                    strokeLinecap="round"
+                    opacity={selectedScenario && selectedScenario !== 'pessimistic' ? 0.3 : 1}
+                  />
+                  
+                  <Path
+                    d={averagePath}
+                    stroke={scenarios.average.color}
+                    strokeWidth={selectedScenario === 'average' ? 3 : 2}
+                    fill="none"
+                    strokeLinecap="round"
+                    opacity={selectedScenario && selectedScenario !== 'average' ? 0.3 : 1}
+                  />
+                  
+                  <Path
+                    d={outperformPath}
+                    stroke={scenarios.outperform.color}
+                    strokeWidth={selectedScenario === 'outperform' ? 3 : 2}
+                    fill="none"
+                    strokeLinecap="round"
+                    opacity={selectedScenario && selectedScenario !== 'outperform' ? 0.3 : 1}
+                  />
+
+                  {/* Data points */}
+                  {hoveredPoint !== null && (
+                    <>
+                      <Circle
+                        cx={lineData[hoveredPoint].x}
+                        cy={lineData[hoveredPoint].pessimisticY}
+                        r={4}
+                        fill={scenarios.pessimistic.color}
+                        stroke="#FFFFFF"
+                        strokeWidth="2"
+                      />
+                      <Circle
+                        cx={lineData[hoveredPoint].x}
+                        cy={lineData[hoveredPoint].averageY}
+                        r={4}
+                        fill={scenarios.average.color}
+                        stroke="#FFFFFF"
+                        strokeWidth="2"
+                      />
+                      <Circle
+                        cx={lineData[hoveredPoint].x}
+                        cy={lineData[hoveredPoint].outperformY}
+                        r={4}
+                        fill={scenarios.outperform.color}
+                        stroke="#FFFFFF"
+                        strokeWidth="2"
+                      />
+                    </>
+                  )}
+                </Svg>
+              </View>
+
+              {/* X-axis labels */}
+              <View style={styles.xAxisLabels}>
+                {lineData.filter((_, index) => index % Math.ceil(lineData.length / 6) === 0).map((point, index) => (
+                  <Text 
+                    key={index}
+                    style={[styles.xAxisLabel, { left: point.x - 20 }]}
+                  >
+                    {point.year}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          {/* Tooltip */}
+          {hoveredPoint !== null && (
+            <View style={styles.tooltip}>
+              <Text style={styles.tooltipYear}>
+                {lineData[hoveredPoint].year} (Age {lineData[hoveredPoint].age})
+              </Text>
+              <View style={styles.tooltipScenarios}>
+                <View style={styles.tooltipRow}>
+                  <View style={[styles.tooltipDot, { backgroundColor: scenarios.pessimistic.color }]} />
+                  <Text style={styles.tooltipLabel}>Pessimistic:</Text>
+                  <Text style={styles.tooltipValue}>
+                    £{lineData[hoveredPoint].pessimisticValue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                  </Text>
+                </View>
+                <View style={styles.tooltipRow}>
+                  <View style={[styles.tooltipDot, { backgroundColor: scenarios.average.color }]} />
+                  <Text style={styles.tooltipLabel}>Average:</Text>
+                  <Text style={styles.tooltipValue}>
+                    £{lineData[hoveredPoint].averageValue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                  </Text>
+                </View>
+                <View style={styles.tooltipRow}>
+                  <View style={[styles.tooltipDot, { backgroundColor: scenarios.outperform.color }]} />
+                  <Text style={styles.tooltipLabel}>Outperform:</Text>
+                  <Text style={styles.tooltipValue}>
+                    £{lineData[hoveredPoint].outperformValue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* Integrated Legend with Values */}
+          <View style={styles.legend}>
+            {Object.entries(scenarios).map(([key, scenario]) => (
+              <TouchableOpacity
+                key={key}
+                style={[
+                  styles.legendItem,
+                  selectedScenario === key && styles.selectedLegendItem
+                ]}
+                onPress={() => setSelectedScenario(selectedScenario === key ? null : key as any)}
+              >
+                <View style={[styles.legendLine, { backgroundColor: scenario.color }]} />
+                <View style={styles.legendContent}>
+                  <Text style={[
+                    styles.legendText,
+                    selectedScenario === key && styles.selectedLegendText
+                  ]}>
+                    {scenario.label}
+                  </Text>
+                  <Text style={[
+                    styles.legendValue,
+                    { color: scenario.color },
+                    selectedScenario === key && styles.selectedLegendValue
+                  ]}>
+                    {balanceVisible 
+                      ? `£${finalProjections[key as keyof typeof finalProjections].toLocaleString('en-GB', { maximumFractionDigits: 0 })}`
+                      : '••••••'
+                    }
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      ) : (
+        <View style={styles.hiddenChart}>
+          <Text style={styles.hiddenText}>Projection data hidden</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginHorizontal: 20,
+    marginBottom: 24,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  title: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 18,
+    color: '#0F172A',
+  },
+  headerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  headerSubtext: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#64748B',
+    fontStyle: 'italic',
+  },
+  metricsContainer: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 12,
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  metricLabel: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: 4,
+  },
+  metricValue: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 16,
+    color: '#0F172A',
+  },
+  chartSection: {
+    paddingVertical: 24,
+    paddingHorizontal: 30,
+    backgroundColor: '#FAFBFC',
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: '#E2E8F0',
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  interactionHintContainer: {
+    marginBottom: 16,
+  },
+  interactionHint: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#94A3B8',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  chartContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    alignItems: 'flex-start',
+  },
+  yAxisContainer: {
+    width: 50,
+    height: 200,
+    position: 'relative',
+    marginRight: 10,
+  },
+  yAxisLabel: {
+    position: 'absolute',
+    right: 0,
+    fontFamily: 'Inter-Regular',
+    fontSize: 10,
+    color: '#64748B',
+    textAlign: 'right',
+  },
+  chartArea: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    position: 'relative',
+  },
+  touchArea: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
+  },
+  xAxisLabels: {
+    position: 'absolute',
+    top: 205,
+    left: 0,
+    right: 0,
+    height: 20,
+  },
+  xAxisLabel: {
+    position: 'absolute',
+    fontFamily: 'Inter-Regular',
+    fontSize: 10,
+    color: '#64748B',
+    width: 40,
+    textAlign: 'center',
+  },
+  tooltip: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  tooltipYear: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#0F172A',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  tooltipScenarios: {
+    gap: 8,
+  },
+  tooltipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tooltipDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  tooltipLabel: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#64748B',
+    flex: 1,
+  },
+  tooltipValue: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 12,
+    color: '#0F172A',
+  },
+  legend: {
+    gap: 12,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  selectedLegendItem: {
+    backgroundColor: '#F1F5F9',
+  },
+  legendLine: {
+    width: 16,
+    height: 3,
+    borderRadius: 2,
+  },
+  legendContent: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  legendText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#64748B',
+  },
+  selectedLegendText: {
+    fontFamily: 'Inter-SemiBold',
+    color: '#0F172A',
+  },
+  legendValue: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 12,
+  },
+  selectedLegendValue: {
+    fontSize: 13,
+  },
+  hiddenChart: {
+    height: 300,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    margin: 20,
+    borderRadius: 12,
+  },
+  hiddenText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 16,
+    color: '#94A3B8',
+  },
+});
