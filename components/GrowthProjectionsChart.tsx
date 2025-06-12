@@ -40,10 +40,56 @@ export function GrowthProjectionsChart({
   const [screenData, setScreenData] = useState(Dimensions.get('window'));
   const { convertToUSD } = useCurrencyConverter();
 
-  // Chart dimensions
-  const GRAPH_WIDTH = Math.min(screenData.width - 80, 340);
-  const GRAPH_HEIGHT = 200;
-  const GRAPH_PADDING = 20;
+  // Use exact same dimensions calculation as PerformanceGraph
+  const calculateGraphDimensions = () => {
+    const { width: screenWidth } = screenData;
+    
+    // Reduced Y-axis width and increased left margin for better centering
+    const yAxisWidth = 15; // Reduced from 20
+    const containerHorizontalPadding = 40;
+    const leftMargin = 30; // Increased left margin to shift graph right
+    const rightMargin = 20; // Slightly increased right margin
+    
+    // Calculate maximum available width for the graph
+    const maxAvailableWidth = screenWidth - containerHorizontalPadding - yAxisWidth - leftMargin - rightMargin;
+    
+    // Set responsive dimensions
+    let graphWidth, graphHeight;
+    
+    if (screenWidth <= 375) {
+      // Small phones (iPhone SE, etc.)
+      graphWidth = Math.min(240, maxAvailableWidth);
+      graphHeight = 140;
+    } else if (screenWidth <= 393) {
+      // iPhone 16, iPhone 14/15 Pro
+      graphWidth = Math.min(275, maxAvailableWidth);
+      graphHeight = 150;
+    } else if (screenWidth <= 430) {
+      // iPhone 16 Plus, iPhone 14/15 Pro Max
+      graphWidth = Math.min(305, maxAvailableWidth);
+      graphHeight = 160;
+    } else {
+      // Larger screens (tablets, etc.)
+      graphWidth = Math.min(340, maxAvailableWidth);
+      graphHeight = 170;
+    }
+    
+    // Ensure minimum viable size
+    graphWidth = Math.max(230, graphWidth);
+    graphHeight = Math.max(130, graphHeight);
+    
+    return {
+      width: graphWidth,
+      height: graphHeight,
+      yAxisWidth,
+      containerPadding: 20,
+      leftMargin,
+      rightMargin,
+      graphPadding: 4
+    };
+  };
+
+  const { width: GRAPH_WIDTH, height: GRAPH_HEIGHT, yAxisWidth, containerPadding, leftMargin, rightMargin, graphPadding } = calculateGraphDimensions();
 
   // Projection scenarios
   const scenarios = {
@@ -126,25 +172,51 @@ export function GrowthProjectionsChart({
 
   const projectionData = generateProjectionData();
 
-  // Calculate chart scaling
+  // Calculate chart scaling - use same approach as PerformanceGraph
   const allValues = projectionData.flatMap(d => [d.pessimistic, d.average, d.outperform]);
   const minValue = Math.min(...allValues, currentValue);
   const maxValue = Math.max(...allValues);
-  const valueRange = maxValue - minValue;
-  const padding = valueRange * 0.1; // 10% padding
+  
+  // Create simplified Y-axis with round numbers in increments
+  const createSimplifiedYAxis = () => {
+    const roundedMin = Math.floor(minValue / 10000) * 10000; // Round to nearest 10k
+    const roundedMax = Math.ceil(maxValue / 10000) * 10000;
+    
+    const range = Math.max(roundedMax - roundedMin, 20000);
+    const adjustedMin = roundedMin;
+    const adjustedMax = adjustedMin + range;
+    
+    const gridValues = [];
+    const increment = Math.max(10000, Math.ceil((adjustedMax - adjustedMin) / 5 / 10000) * 10000);
+    
+    for (let value = adjustedMin; value <= adjustedMax; value += increment) {
+      gridValues.push(value);
+    }
+    
+    return {
+      min: adjustedMin,
+      max: adjustedMax,
+      range: adjustedMax - adjustedMin,
+      gridValues
+    };
+  };
 
-  const chartMinValue = Math.max(0, minValue - padding);
-  const chartMaxValue = maxValue + padding;
-  const chartRange = chartMaxValue - chartMinValue;
+  const yAxisConfig = createSimplifiedYAxis();
 
-  // Generate line data points
+  // Calculate average performance for header
+  const finalProjections = projectionData[projectionData.length - 1];
+  const avgGrowth = ((finalProjections.average - currentValue) / currentValue) * 100 / (targetAge - currentAge);
+
+  // Generate line chart data points with optimized spacing - same as PerformanceGraph
   const generateLineData = () => {
     return projectionData.map((point, index) => {
-      const x = GRAPH_PADDING + (index / (projectionData.length - 1)) * (GRAPH_WIDTH - 2 * GRAPH_PADDING);
+      // Add padding to ensure all points are fully visible
+      const effectiveWidth = GRAPH_WIDTH - (graphPadding * 4); // Increased padding
+      const x = graphPadding * 2 + (index / (projectionData.length - 1)) * effectiveWidth;
       
-      const pessimisticY = GRAPH_HEIGHT - ((point.pessimistic - chartMinValue) / chartRange) * GRAPH_HEIGHT;
-      const averageY = GRAPH_HEIGHT - ((point.average - chartMinValue) / chartRange) * GRAPH_HEIGHT;
-      const outperformY = GRAPH_HEIGHT - ((point.outperform - chartMinValue) / chartRange) * GRAPH_HEIGHT;
+      const pessimisticY = GRAPH_HEIGHT - ((point.pessimistic - yAxisConfig.min) / yAxisConfig.range) * GRAPH_HEIGHT;
+      const averageY = GRAPH_HEIGHT - ((point.average - yAxisConfig.min) / yAxisConfig.range) * GRAPH_HEIGHT;
+      const outperformY = GRAPH_HEIGHT - ((point.outperform - yAxisConfig.min) / yAxisConfig.range) * GRAPH_HEIGHT;
 
       return {
         x,
@@ -163,7 +235,7 @@ export function GrowthProjectionsChart({
 
   const lineData = generateLineData();
 
-  // Generate smooth SVG path
+  // Generate smooth curved SVG path - same as PerformanceGraph
   const generateSmoothPath = (points: { x: number; y: number }[]) => {
     if (points.length === 0) return '';
     if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
@@ -174,7 +246,7 @@ export function GrowthProjectionsChart({
       const current = points[i];
       const previous = points[i - 1];
       
-      const tension = 0.2;
+      const tension = 0.15;
       
       if (i === 1) {
         const next = points[i + 1] || current;
@@ -213,28 +285,15 @@ export function GrowthProjectionsChart({
   const averagePath = generateSmoothPath(lineData.map(d => ({ x: d.x, y: d.averageY })));
   const outperformPath = generateSmoothPath(lineData.map(d => ({ x: d.x, y: d.outperformY })));
 
-  // Generate Y-axis grid lines
-  const generateGridLines = () => {
-    const gridCount = 5;
-    const gridLines = [];
-    
-    for (let i = 0; i <= gridCount; i++) {
-      const value = chartMinValue + (chartRange * i / gridCount);
-      const y = GRAPH_HEIGHT - (i / gridCount) * GRAPH_HEIGHT;
-      
-      gridLines.push({
-        y,
-        value: value / 1000, // Convert to thousands for display
-        label: `£${(value / 1000).toFixed(0)}k`
-      });
-    }
-    
-    return gridLines;
-  };
+  // Generate grid lines - same format as PerformanceGraph
+  const gridLines = yAxisConfig.gridValues.map(value => {
+    const y = GRAPH_HEIGHT - ((value - yAxisConfig.min) / yAxisConfig.range) * GRAPH_HEIGHT;
+    return { y, value: (value / 1000).toString(), label: `£${(value / 1000).toFixed(0)}k` };
+  });
 
-  const gridLines = generateGridLines();
+  const accountColor = accountType === 'isa' ? '#059669' : '#7C3AED';
 
-  // Touch handling
+  // Create pan responder for touch interactions - same as PerformanceGraph
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
@@ -266,7 +325,9 @@ export function GrowthProjectionsChart({
       }
     });
 
-    if (closestDistance < 30) {
+    const touchTolerance = Math.max(25, GRAPH_WIDTH / 15);
+
+    if (closestDistance < touchTolerance) {
       setHoveredPoint(closestIndex);
       setTouchPosition({ x, y });
       
@@ -285,11 +346,37 @@ export function GrowthProjectionsChart({
       if (distances[closestScenario] < 40) {
         setSelectedScenario(closestScenario);
       }
+    } else if (hoveredPoint !== null) {
+      setHoveredPoint(null);
+      setSelectedScenario(null);
+      setTouchPosition(null);
+    }
+  };
+
+  // Responsive sizing functions - same as PerformanceGraph
+  const getDataPointSize = (isHovered: boolean) => {
+    const baseSize = GRAPH_WIDTH < 250 ? 3.5 : 4.5;
+    const hoveredSize = GRAPH_WIDTH < 250 ? 6 : 7;
+    return isHovered ? hoveredSize : baseSize;
+  };
+
+  const getStrokeWidth = () => {
+    return GRAPH_WIDTH < 250 ? 2 : 2.5;
+  };
+
+  // Font sizes optimized for single-line year display - same as PerformanceGraph
+  const getFontSize = (type: 'label' | 'value' | 'axis' | 'year') => {
+    const baseScale = GRAPH_WIDTH < 250 ? 0.8 : 0.9; // Reduced scale for smaller fonts
+    switch (type) {
+      case 'year': return Math.round(10 * baseScale); // Reduced from 13 to 10
+      case 'axis': return Math.round(10 * baseScale);
+      case 'label': return Math.round(8 * baseScale);
+      case 'value': return Math.round(11 * baseScale);
+      default: return Math.round(10 * baseScale);
     }
   };
 
   // Calculate key metrics
-  const finalProjections = projectionData[projectionData.length - 1];
   const totalContributions = finalProjections.contributions;
   
   const gains = {
@@ -300,53 +387,87 @@ export function GrowthProjectionsChart({
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Header - same structure as PerformanceGraph */}
+      <View style={[styles.header, { paddingHorizontal: containerPadding }]}>
         <Text style={styles.title}>Growth Projections</Text>
-        <View style={styles.headerInfo}>
-          <Info size={16} color="#64748B" />
-          <Text style={styles.headerSubtext}>Tap lines to explore scenarios</Text>
+        <View style={styles.performanceIndicator}>
+          <TrendingUp size={16} color="#10B981" />
+          <Text style={[styles.outperformanceText, { color: '#10B981' }]}>
+            {balanceVisible 
+              ? `${avgGrowth.toFixed(1)}% avg annual`
+              : '••••'
+            }
+          </Text>
         </View>
       </View>
 
-      {/* Key Metrics */}
-      <View style={styles.metricsContainer}>
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>Current Value</Text>
-          <Text style={styles.metricValue}>
-            {balanceVisible ? `£${currentValue.toLocaleString('en-GB')}` : '••••••'}
+      {/* Metrics Container - same structure as PerformanceGraph */}
+      <View style={[styles.metricsContainer, { paddingHorizontal: containerPadding }]}>
+        <View style={styles.metricItem}>
+          <View style={[styles.metricDot, { backgroundColor: scenarios.pessimistic.color }]} />
+          <Text style={styles.metricLabel}>Pessimistic</Text>
+          <Text style={[styles.metricValue, { color: '#EF4444' }]}>
+            {balanceVisible 
+              ? `£${(finalProjections.pessimistic / 1000).toFixed(0)}k`
+              : '••••'
+            }
           </Text>
         </View>
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>Target Age</Text>
-          <Text style={styles.metricValue}>{targetAge}</Text>
+        <View style={styles.metricItem}>
+          <View style={[styles.metricDot, { backgroundColor: scenarios.average.color }]} />
+          <Text style={styles.metricLabel}>Average</Text>
+          <Text style={[styles.metricValue, { color: '#059669' }]}>
+            {balanceVisible 
+              ? `£${(finalProjections.average / 1000).toFixed(0)}k`
+              : '••••'
+            }
+          </Text>
         </View>
-        <View style={styles.metricCard}>
-          <Text style={styles.metricLabel}>Years to Go</Text>
-          <Text style={styles.metricValue}>{targetAge - currentAge}</Text>
+        <View style={styles.metricItem}>
+          <View style={[styles.metricDot, { backgroundColor: scenarios.outperform.color }]} />
+          <Text style={styles.metricLabel}>Outperform</Text>
+          <Text style={[styles.metricValue, { color: '#7C3AED' }]}>
+            {balanceVisible 
+              ? `£${(finalProjections.outperform / 1000).toFixed(0)}k`
+              : '••••'
+            }
+          </Text>
         </View>
       </View>
 
       {/* Chart */}
       {balanceVisible ? (
-        <View style={styles.chartSection}>
-          <View style={styles.chartContainer}>
-            {/* Y-axis labels */}
-            <View style={styles.yAxisContainer}>
+        <View style={styles.graphSection}>
+          <View style={[styles.interactionHintContainer, { paddingHorizontal: containerPadding }]}>
+            <Text style={styles.interactionHint}>Tap and hold data points to see values</Text>
+          </View>
+          
+          <View style={[styles.graphContainer, { paddingHorizontal: containerPadding }]}>
+            {/* Y-axis labels - same as PerformanceGraph */}
+            <View style={[styles.yAxisLabels, { width: yAxisWidth, height: GRAPH_HEIGHT, marginLeft: leftMargin }]}>
               {gridLines.map((line, index) => (
-                <Text key={index} style={[styles.yAxisLabel, { top: line.y - 8 }]}>
+                <Text 
+                  key={index} 
+                  style={[
+                    styles.yAxisLabel, 
+                    { 
+                      top: line.y - 6,
+                      fontSize: getFontSize('axis'),
+                      fontWeight: '500'
+                    }
+                  ]}
+                >
                   {line.label}
                 </Text>
               ))}
             </View>
-
-            {/* Chart area */}
-            <View style={[styles.chartArea, { width: GRAPH_WIDTH, height: GRAPH_HEIGHT }]}>
+            
+            <View style={[styles.graphArea, { width: GRAPH_WIDTH, height: GRAPH_HEIGHT + 50, marginLeft: 8 }]}>
               <View 
-                style={styles.touchArea}
+                style={[styles.touchArea, { width: GRAPH_WIDTH, height: GRAPH_HEIGHT }]}
                 {...panResponder.panHandlers}
               >
-                <Svg width={GRAPH_WIDTH} height={GRAPH_HEIGHT}>
+                <Svg width={GRAPH_WIDTH} height={GRAPH_HEIGHT} style={styles.svg}>
                   <Defs>
                     <LinearGradient id="pessimisticGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                       <Stop offset="0%" stopColor={scenarios.pessimistic.color} stopOpacity="0.1" />
@@ -365,10 +486,10 @@ export function GrowthProjectionsChart({
                   {/* Grid lines */}
                   {gridLines.map((line, index) => (
                     <Line
-                      key={index}
-                      x1={GRAPH_PADDING}
+                      key={`grid-${index}`}
+                      x1={graphPadding * 2}
                       y1={line.y}
-                      x2={GRAPH_WIDTH - GRAPH_PADDING}
+                      x2={GRAPH_WIDTH - graphPadding * 2}
                       y2={line.y}
                       stroke="#F1F5F9"
                       strokeWidth="1"
@@ -379,27 +500,30 @@ export function GrowthProjectionsChart({
                   <Path
                     d={pessimisticPath}
                     stroke={scenarios.pessimistic.color}
-                    strokeWidth={selectedScenario === 'pessimistic' ? 3 : 2}
+                    strokeWidth={selectedScenario === 'pessimistic' ? getStrokeWidth() + 0.5 : getStrokeWidth()}
                     fill="none"
                     strokeLinecap="round"
+                    strokeLinejoin="round"
                     opacity={selectedScenario && selectedScenario !== 'pessimistic' ? 0.3 : 1}
                   />
                   
                   <Path
                     d={averagePath}
                     stroke={scenarios.average.color}
-                    strokeWidth={selectedScenario === 'average' ? 3 : 2}
+                    strokeWidth={selectedScenario === 'average' ? getStrokeWidth() + 0.5 : getStrokeWidth()}
                     fill="none"
                     strokeLinecap="round"
+                    strokeLinejoin="round"
                     opacity={selectedScenario && selectedScenario !== 'average' ? 0.3 : 1}
                   />
                   
                   <Path
                     d={outperformPath}
                     stroke={scenarios.outperform.color}
-                    strokeWidth={selectedScenario === 'outperform' ? 3 : 2}
+                    strokeWidth={selectedScenario === 'outperform' ? getStrokeWidth() + 0.5 : getStrokeWidth()}
                     fill="none"
                     strokeLinecap="round"
+                    strokeLinejoin="round"
                     opacity={selectedScenario && selectedScenario !== 'outperform' ? 0.3 : 1}
                   />
 
@@ -409,7 +533,7 @@ export function GrowthProjectionsChart({
                       <Circle
                         cx={lineData[hoveredPoint].x}
                         cy={lineData[hoveredPoint].pessimisticY}
-                        r={4}
+                        r={getDataPointSize(true)}
                         fill={scenarios.pessimistic.color}
                         stroke="#FFFFFF"
                         strokeWidth="2"
@@ -417,7 +541,7 @@ export function GrowthProjectionsChart({
                       <Circle
                         cx={lineData[hoveredPoint].x}
                         cy={lineData[hoveredPoint].averageY}
-                        r={4}
+                        r={getDataPointSize(true)}
                         fill={scenarios.average.color}
                         stroke="#FFFFFF"
                         strokeWidth="2"
@@ -425,22 +549,73 @@ export function GrowthProjectionsChart({
                       <Circle
                         cx={lineData[hoveredPoint].x}
                         cy={lineData[hoveredPoint].outperformY}
-                        r={4}
+                        r={getDataPointSize(true)}
                         fill={scenarios.outperform.color}
                         stroke="#FFFFFF"
                         strokeWidth="2"
                       />
                     </>
                   )}
+
+                  {/* Hover labels */}
+                  {hoveredPoint !== null && (
+                    <>
+                      <SvgText
+                        x={lineData[hoveredPoint].x}
+                        y={lineData[hoveredPoint].pessimisticY - 15}
+                        fontSize={getFontSize('value')}
+                        fontFamily="Inter-SemiBold"
+                        fill={scenarios.pessimistic.color}
+                        textAnchor="middle"
+                      >
+                        £{(lineData[hoveredPoint].pessimisticValue / 1000).toFixed(0)}k
+                      </SvgText>
+                      
+                      <SvgText
+                        x={lineData[hoveredPoint].x}
+                        y={lineData[hoveredPoint].averageY - 15}
+                        fontSize={getFontSize('value')}
+                        fontFamily="Inter-SemiBold"
+                        fill={scenarios.average.color}
+                        textAnchor="middle"
+                      >
+                        £{(lineData[hoveredPoint].averageValue / 1000).toFixed(0)}k
+                      </SvgText>
+                      
+                      <SvgText
+                        x={lineData[hoveredPoint].x}
+                        y={lineData[hoveredPoint].outperformY - 15}
+                        fontSize={getFontSize('value')}
+                        fontFamily="Inter-SemiBold"
+                        fill={scenarios.outperform.color}
+                        textAnchor="middle"
+                      >
+                        £{(lineData[hoveredPoint].outperformValue / 1000).toFixed(0)}k
+                      </SvgText>
+                    </>
+                  )}
                 </Svg>
               </View>
-
-              {/* X-axis labels */}
+              
+              {/* Year labels - same as PerformanceGraph */}
               <View style={styles.xAxisLabels}>
                 {lineData.filter((_, index) => index % Math.ceil(lineData.length / 6) === 0).map((point, index) => (
                   <Text 
-                    key={index}
-                    style={[styles.xAxisLabel, { left: point.x - 20 }]}
+                    key={`year-${index}`}
+                    style={[
+                      styles.yearLabel, 
+                      { 
+                        left: point.x - 20,
+                        top: GRAPH_HEIGHT + 16,
+                        fontSize: getFontSize('year'),
+                        fontWeight: hoveredPoint === index ? '700' : '600',
+                        color: hoveredPoint === index ? accountColor : '#374151',
+                        width: 40,
+                        textAlign: 'center',
+                      }
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit={false}
                   >
                     {point.year}
                   </Text>
@@ -449,12 +624,10 @@ export function GrowthProjectionsChart({
             </View>
           </View>
 
-          {/* Tooltip */}
+          {/* Hover tooltip - same structure as PerformanceGraph */}
           {hoveredPoint !== null && (
-            <View style={styles.tooltip}>
-              <Text style={styles.tooltipYear}>
-                {lineData[hoveredPoint].year} (Age {lineData[hoveredPoint].age})
-              </Text>
+            <View style={[styles.tooltip, { marginHorizontal: containerPadding }]}>
+              <Text style={styles.tooltipYear}>{lineData[hoveredPoint].year} (Age {lineData[hoveredPoint].age})</Text>
               <View style={styles.tooltipScenarios}>
                 <View style={styles.tooltipRow}>
                   <View style={[styles.tooltipDot, { backgroundColor: scenarios.pessimistic.color }]} />
@@ -481,8 +654,8 @@ export function GrowthProjectionsChart({
             </View>
           )}
 
-          {/* Legend */}
-          <View style={styles.legend}>
+          {/* Compact Legend - same as PerformanceGraph */}
+          <View style={[styles.legend, { paddingHorizontal: containerPadding }]}>
             {Object.entries(scenarios).map(([key, scenario]) => (
               <TouchableOpacity
                 key={key}
@@ -502,34 +675,9 @@ export function GrowthProjectionsChart({
               </TouchableOpacity>
             ))}
           </View>
-
-          {/* Final Projections Summary */}
-          <View style={styles.summaryContainer}>
-            <Text style={styles.summaryTitle}>Projected Value at Age {targetAge}</Text>
-            <View style={styles.summaryGrid}>
-              {Object.entries(scenarios).map(([key, scenario]) => (
-                <View key={key} style={styles.summaryCard}>
-                  <View style={[styles.summaryDot, { backgroundColor: scenario.color }]} />
-                  <Text style={styles.summaryLabel}>{scenario.label}</Text>
-                  <Text style={[styles.summaryValue, { color: scenario.color }]}>
-                    {balanceVisible 
-                      ? `£${finalProjections[key as keyof typeof finalProjections].toLocaleString('en-GB', { maximumFractionDigits: 0 })}`
-                      : '••••••'
-                    }
-                  </Text>
-                  <Text style={styles.summaryGains}>
-                    {balanceVisible 
-                      ? `+£${gains[key as keyof typeof gains].toLocaleString('en-GB', { maximumFractionDigits: 0 })} gains`
-                      : '••••••'
-                    }
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
         </View>
       ) : (
-        <View style={styles.hiddenChart}>
+        <View style={[styles.hiddenGraph, { height: GRAPH_HEIGHT + 60, marginHorizontal: containerPadding }]}>
           <Text style={styles.hiddenText}>Projection data hidden</Text>
         </View>
       )}
@@ -548,109 +696,118 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    paddingVertical: 20,
     overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    marginBottom: 16,
   },
   title: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 18,
     color: '#0F172A',
+    flex: 1,
   },
-  headerInfo: {
+  performanceIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  headerSubtext: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 12,
-    color: '#64748B',
-    fontStyle: 'italic',
+  outperformanceText: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 14,
   },
   metricsContainer: {
     flexDirection: 'row',
-    padding: 20,
-    gap: 12,
+    justifyContent: 'space-between',
+    marginBottom: 20,
   },
-  metricCard: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    padding: 12,
-    borderRadius: 8,
+  metricItem: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  metricDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   metricLabel: {
     fontFamily: 'Inter-Regular',
     fontSize: 12,
     color: '#64748B',
-    marginBottom: 4,
   },
   metricValue: {
-    fontFamily: 'Inter-Bold',
-    fontSize: 16,
-    color: '#0F172A',
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 12,
   },
-  chartSection: {
-    padding: 20,
+  graphSection: {
+    marginBottom: 16,
   },
-  chartContainer: {
+  interactionHintContainer: {
+    marginBottom: 16,
+  },
+  interactionHint: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#94A3B8',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  graphContainer: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 16,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
-  yAxisContainer: {
-    width: 50,
-    height: 200,
+  yAxisLabels: {
     position: 'relative',
-    marginRight: 10,
+    marginRight: 1,
   },
   yAxisLabel: {
     position: 'absolute',
     right: 0,
-    fontFamily: 'Inter-Regular',
-    fontSize: 10,
+    fontFamily: 'Inter-Medium',
     color: '#64748B',
     textAlign: 'right',
   },
-  chartArea: {
+  graphArea: {
+    position: 'relative',
     backgroundColor: '#FAFBFC',
     borderRadius: 12,
-    position: 'relative',
+    padding: 2,
   },
   touchArea: {
+    position: 'absolute',
+    top: 2,
+    left: 2,
+    zIndex: 10,
+  },
+  svg: {
+    backgroundColor: 'transparent',
+  },
+  xAxisLabels: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 10,
   },
-  xAxisLabels: {
+  yearLabel: {
     position: 'absolute',
-    top: 205,
-    left: 0,
-    right: 0,
+    fontFamily: 'Inter-Bold',
     height: 20,
-  },
-  xAxisLabel: {
-    position: 'absolute',
-    fontFamily: 'Inter-Regular',
-    fontSize: 10,
-    color: '#64748B',
-    width: 40,
-    textAlign: 'center',
+    lineHeight: 20,
   },
   tooltip: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
+    padding: 12,
+    marginBottom: 16,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -658,13 +815,15 @@ const styles = StyleSheet.create({
     elevation: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    alignSelf: 'center',
+    maxWidth: '90%',
   },
   tooltipYear: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 14,
     color: '#0F172A',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   tooltipScenarios: {
     gap: 8,
@@ -692,14 +851,13 @@ const styles = StyleSheet.create({
   },
   legend: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-    paddingHorizontal: 10,
+    justifyContent: 'center',
+    gap: 24,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -714,62 +872,17 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontFamily: 'Inter-Regular',
-    fontSize: 11,
+    fontSize: 12,
     color: '#64748B',
   },
   selectedLegendText: {
     fontFamily: 'Inter-SemiBold',
     color: '#0F172A',
   },
-  summaryContainer: {
-    backgroundColor: '#F8FAFC',
-    padding: 16,
-    borderRadius: 12,
-  },
-  summaryTitle: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 16,
-    color: '#0F172A',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  summaryGrid: {
-    gap: 12,
-  },
-  summaryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 12,
-    borderRadius: 8,
-    gap: 12,
-  },
-  summaryDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  summaryLabel: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 12,
-    color: '#64748B',
-    flex: 1,
-  },
-  summaryValue: {
-    fontFamily: 'Inter-Bold',
-    fontSize: 14,
-  },
-  summaryGains: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 10,
-    color: '#64748B',
-  },
-  hiddenChart: {
-    height: 300,
+  hiddenGraph: {
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    margin: 20,
     borderRadius: 12,
   },
   hiddenText: {
