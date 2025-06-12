@@ -620,58 +620,38 @@ export function GrowthProjectionsChart({
             </View>
           )}
 
-          {/* Calculator Values and Color Key Layout */}
-          <View style={[styles.legendContainer, { paddingHorizontal: containerPadding }]}>
-            {/* Left Side: Calculator Values */}
-            <View style={styles.calculatorValues}>
-              <Text style={styles.calculatorTitle}>Projected Value at Age {targetAge}</Text>
-              <View style={styles.calculatorMetrics}>
-                <View style={styles.calculatorMetric}>
-                  <Text style={styles.calculatorLabel}>Current Value</Text>
-                  <Text style={styles.calculatorValue}>
-                    {balanceVisible ? `£${currentValue.toLocaleString('en-GB')}` : '••••••'}
+          {/* Integrated Legend with Values - Vertical Layout */}
+          <View style={[styles.legend, { paddingHorizontal: containerPadding }]}>
+            {Object.entries(scenarios).map(([key, scenario]) => (
+              <TouchableOpacity
+                key={key}
+                style={[
+                  styles.legendItem,
+                  selectedScenario === key && styles.selectedLegendItem
+                ]}
+                onPress={() => setSelectedScenario(selectedScenario === key ? null : key as any)}
+              >
+                <View style={[styles.legendLine, { backgroundColor: scenario.color }]} />
+                <View style={styles.legendContent}>
+                  <Text style={[
+                    styles.legendText,
+                    selectedScenario === key && styles.selectedLegendText
+                  ]}>
+                    {scenario.label}
+                  </Text>
+                  <Text style={[
+                    styles.legendValue,
+                    { color: scenario.color },
+                    selectedScenario === key && styles.selectedLegendValue
+                  ]}>
+                    {balanceVisible 
+                      ? `£${(finalProjections[key as keyof typeof finalProjections] / 1000).toFixed(0)}k`
+                      : '••••'
+                    }
                   </Text>
                 </View>
-                <View style={styles.calculatorMetric}>
-                  <Text style={styles.calculatorLabel}>Years to Go</Text>
-                  <Text style={styles.calculatorValue}>{targetAge - currentAge}</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Right Side: Color Key */}
-            <View style={styles.colorKey}>
-              {Object.entries(scenarios).map(([key, scenario]) => (
-                <TouchableOpacity
-                  key={key}
-                  style={[
-                    styles.keyItem,
-                    selectedScenario === key && styles.selectedKeyItem
-                  ]}
-                  onPress={() => setSelectedScenario(selectedScenario === key ? null : key as any)}
-                >
-                  <View style={[styles.keyLine, { backgroundColor: scenario.color }]} />
-                  <View style={styles.keyContent}>
-                    <Text style={[
-                      styles.keyText,
-                      selectedScenario === key && styles.selectedKeyText
-                    ]}>
-                      {scenario.label}
-                    </Text>
-                    <Text style={[
-                      styles.keyValue,
-                      { color: scenario.color },
-                      selectedScenario === key && styles.selectedKeyValue
-                    ]}>
-                      {balanceVisible 
-                        ? `£${(finalProjections[key as keyof typeof finalProjections] / 1000).toFixed(0)}k`
-                        : '••••'
-                      }
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
       ) : (
@@ -822,85 +802,50 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#0F172A',
   },
-  // New layout styles for calculator values and color key
-  legendContainer: {
-    flexDirection: 'row',
-    gap: 20,
-    alignItems: 'flex-start',
-  },
-  // Left side: Calculator values
-  calculatorValues: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    padding: 16,
-    borderRadius: 12,
-  },
-  calculatorTitle: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 14,
-    color: '#0F172A',
-    marginBottom: 12,
-  },
-  calculatorMetrics: {
-    gap: 8,
-  },
-  calculatorMetric: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  // Updated legend styles for vertical layout with integrated values
+  legend: {
     alignItems: 'center',
+    gap: 12, // Vertical spacing between legend items
   },
-  calculatorLabel: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 12,
-    color: '#64748B',
-  },
-  calculatorValue: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 12,
-    color: '#0F172A',
-  },
-  // Right side: Color key
-  colorKey: {
-    flex: 1,
-    gap: 8,
-  },
-  keyItem: {
+  legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 8,
+    minWidth: 200, // Increased width to accommodate values
+    justifyContent: 'flex-start',
   },
-  selectedKeyItem: {
+  selectedLegendItem: {
     backgroundColor: '#F1F5F9',
   },
-  keyLine: {
+  legendLine: {
     width: 16,
     height: 3,
     borderRadius: 2,
   },
-  keyContent: {
+  legendContent: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  keyText: {
+  legendText: {
     fontFamily: 'Inter-Regular',
     fontSize: 12,
     color: '#64748B',
   },
-  selectedKeyText: {
+  selectedLegendText: {
     fontFamily: 'Inter-SemiBold',
     color: '#0F172A',
   },
-  keyValue: {
+  legendValue: {
     fontFamily: 'Inter-Bold',
-    fontSize: 12,
+    fontSize: 14,
   },
-  selectedKeyValue: {
-    fontSize: 13,
+  selectedLegendValue: {
+    fontSize: 15,
   },
   hiddenGraph: {
     justifyContent: 'center',
