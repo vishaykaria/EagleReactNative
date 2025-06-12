@@ -40,13 +40,13 @@ export function GrowthProjectionsChart({
   const [screenData, setScreenData] = useState(Dimensions.get('window'));
   const { convertToUSD } = useCurrencyConverter();
 
-  // Use exact same dimensions calculation as PerformanceGraph
+  // Use exact same dimensions calculation as PerformanceGraph but with wider container
   const calculateGraphDimensions = () => {
     const { width: screenWidth } = screenData;
     
     // Reduced Y-axis width and increased left margin for better centering
     const yAxisWidth = 15; // Reduced from 20
-    const containerHorizontalPadding = 40;
+    const containerHorizontalPadding = 20; // Reduced from 40 to make container wider
     const leftMargin = 30; // Increased left margin to shift graph right
     const rightMargin = 20; // Slightly increased right margin
     
@@ -58,31 +58,31 @@ export function GrowthProjectionsChart({
     
     if (screenWidth <= 375) {
       // Small phones (iPhone SE, etc.)
-      graphWidth = Math.min(240, maxAvailableWidth);
+      graphWidth = Math.min(280, maxAvailableWidth); // Increased from 240
       graphHeight = 140;
     } else if (screenWidth <= 393) {
       // iPhone 16, iPhone 14/15 Pro
-      graphWidth = Math.min(275, maxAvailableWidth);
+      graphWidth = Math.min(315, maxAvailableWidth); // Increased from 275
       graphHeight = 150;
     } else if (screenWidth <= 430) {
       // iPhone 16 Plus, iPhone 14/15 Pro Max
-      graphWidth = Math.min(305, maxAvailableWidth);
+      graphWidth = Math.min(345, maxAvailableWidth); // Increased from 305
       graphHeight = 160;
     } else {
       // Larger screens (tablets, etc.)
-      graphWidth = Math.min(340, maxAvailableWidth);
+      graphWidth = Math.min(380, maxAvailableWidth); // Increased from 340
       graphHeight = 170;
     }
     
     // Ensure minimum viable size
-    graphWidth = Math.max(230, graphWidth);
+    graphWidth = Math.max(270, graphWidth); // Increased from 230
     graphHeight = Math.max(130, graphHeight);
     
     return {
       width: graphWidth,
       height: graphHeight,
       yAxisWidth,
-      containerPadding: 20,
+      containerPadding: 10, // Reduced from 20 to make container wider
       leftMargin,
       rightMargin,
       graphPadding: 4
