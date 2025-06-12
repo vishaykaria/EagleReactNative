@@ -654,7 +654,7 @@ export function GrowthProjectionsChart({
             </View>
           )}
 
-          {/* Compact Legend - same as PerformanceGraph */}
+          {/* Vertical Legend - Changed from horizontal to vertical layout */}
           <View style={[styles.legend, { paddingHorizontal: containerPadding }]}>
             {Object.entries(scenarios).map(([key, scenario]) => (
               <TouchableOpacity
@@ -849,18 +849,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#0F172A',
   },
+  // Updated legend styles for vertical layout
   legend: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
+    alignItems: 'center',
+    gap: 12, // Vertical spacing between legend items
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    minWidth: 160, // Ensure consistent width for all legend items
   },
   selectedLegendItem: {
     backgroundColor: '#F1F5F9',
