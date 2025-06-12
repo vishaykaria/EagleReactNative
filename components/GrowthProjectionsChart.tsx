@@ -401,40 +401,6 @@ export function GrowthProjectionsChart({
         </View>
       </View>
 
-      {/* Metrics Container - same structure as PerformanceGraph */}
-      <View style={[styles.metricsContainer, { paddingHorizontal: containerPadding }]}>
-        <View style={styles.metricItem}>
-          <View style={[styles.metricDot, { backgroundColor: scenarios.pessimistic.color }]} />
-          <Text style={styles.metricLabel}>Pessimistic</Text>
-          <Text style={[styles.metricValue, { color: '#EF4444' }]}>
-            {balanceVisible 
-              ? `£${(finalProjections.pessimistic / 1000).toFixed(0)}k`
-              : '••••'
-            }
-          </Text>
-        </View>
-        <View style={styles.metricItem}>
-          <View style={[styles.metricDot, { backgroundColor: scenarios.average.color }]} />
-          <Text style={styles.metricLabel}>Average</Text>
-          <Text style={[styles.metricValue, { color: '#059669' }]}>
-            {balanceVisible 
-              ? `£${(finalProjections.average / 1000).toFixed(0)}k`
-              : '••••'
-            }
-          </Text>
-        </View>
-        <View style={styles.metricItem}>
-          <View style={[styles.metricDot, { backgroundColor: scenarios.outperform.color }]} />
-          <Text style={styles.metricLabel}>Outperform</Text>
-          <Text style={[styles.metricValue, { color: '#7C3AED' }]}>
-            {balanceVisible 
-              ? `£${(finalProjections.outperform / 1000).toFixed(0)}k`
-              : '••••'
-            }
-          </Text>
-        </View>
-      </View>
-
       {/* Chart */}
       {balanceVisible ? (
         <View style={styles.graphSection}>
@@ -654,7 +620,7 @@ export function GrowthProjectionsChart({
             </View>
           )}
 
-          {/* Vertical Legend - Changed from horizontal to vertical layout */}
+          {/* Integrated Legend with Values - Vertical Layout */}
           <View style={[styles.legend, { paddingHorizontal: containerPadding }]}>
             {Object.entries(scenarios).map(([key, scenario]) => (
               <TouchableOpacity
@@ -666,12 +632,24 @@ export function GrowthProjectionsChart({
                 onPress={() => setSelectedScenario(selectedScenario === key ? null : key as any)}
               >
                 <View style={[styles.legendLine, { backgroundColor: scenario.color }]} />
-                <Text style={[
-                  styles.legendText,
-                  selectedScenario === key && styles.selectedLegendText
-                ]}>
-                  {scenario.label}
-                </Text>
+                <View style={styles.legendContent}>
+                  <Text style={[
+                    styles.legendText,
+                    selectedScenario === key && styles.selectedLegendText
+                  ]}>
+                    {scenario.label}
+                  </Text>
+                  <Text style={[
+                    styles.legendValue,
+                    { color: scenario.color },
+                    selectedScenario === key && styles.selectedLegendValue
+                  ]}>
+                    {balanceVisible 
+                      ? `£${(finalProjections[key as keyof typeof finalProjections] / 1000).toFixed(0)}k`
+                      : '••••'
+                    }
+                  </Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -719,31 +697,6 @@ const styles = StyleSheet.create({
   outperformanceText: {
     fontFamily: 'Inter-Bold',
     fontSize: 14,
-  },
-  metricsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  metricItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flex: 1,
-  },
-  metricDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  metricLabel: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 12,
-    color: '#64748B',
-  },
-  metricValue: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 12,
   },
   graphSection: {
     marginBottom: 16,
@@ -849,7 +802,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#0F172A',
   },
-  // Updated legend styles for vertical layout
+  // Updated legend styles for vertical layout with integrated values
   legend: {
     alignItems: 'center',
     gap: 12, // Vertical spacing between legend items
@@ -857,11 +810,12 @@ const styles = StyleSheet.create({
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 8,
-    minWidth: 160, // Ensure consistent width for all legend items
+    minWidth: 200, // Increased width to accommodate values
+    justifyContent: 'flex-start',
   },
   selectedLegendItem: {
     backgroundColor: '#F1F5F9',
@@ -871,6 +825,12 @@ const styles = StyleSheet.create({
     height: 3,
     borderRadius: 2,
   },
+  legendContent: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   legendText: {
     fontFamily: 'Inter-Regular',
     fontSize: 12,
@@ -879,6 +839,13 @@ const styles = StyleSheet.create({
   selectedLegendText: {
     fontFamily: 'Inter-SemiBold',
     color: '#0F172A',
+  },
+  legendValue: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 14,
+  },
+  selectedLegendValue: {
+    fontSize: 15,
   },
   hiddenGraph: {
     justifyContent: 'center',
