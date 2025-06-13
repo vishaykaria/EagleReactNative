@@ -40,6 +40,26 @@ export function GrowthProjectionsChart({
   const [screenData, setScreenData] = useState(Dimensions.get('window'));
   const { convertToUSD } = useCurrencyConverter();
 
+  // Helper function to format values with K or M suffix
+  const formatValue = (value: number): string => {
+    if (value >= 1000000) {
+      return `£${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `£${(value / 1000).toFixed(0)}k`;
+    } else {
+      return `£${value.toFixed(0)}`;
+    }
+  };
+
+  // Helper function to format Y-axis labels
+  const formatYAxisLabel = (value: number): string => {
+    if (value >= 1000000) {
+      return `£${(value / 1000000).toFixed(1)}M`;
+    } else {
+      return `£${(value / 1000).toFixed(0)}k`;
+    }
+  };
+
   // Calculate dimensions - 15% narrower than PerformanceGraph
   const calculateGraphDimensions = () => {
     const { width: screenWidth } = screenData;
@@ -288,7 +308,7 @@ export function GrowthProjectionsChart({
   // Generate grid lines - same format as PerformanceGraph
   const gridLines = yAxisConfig.gridValues.map(value => {
     const y = GRAPH_HEIGHT - ((value - yAxisConfig.min) / yAxisConfig.range) * GRAPH_HEIGHT;
-    return { y, value: (value / 1000).toString(), label: `£${(value / 1000).toFixed(0)}k` };
+    return { y, value: (value / 1000).toString(), label: formatYAxisLabel(value) };
   });
 
   const accountColor = accountType === 'isa' ? '#059669' : '#7C3AED';
@@ -534,7 +554,7 @@ export function GrowthProjectionsChart({
                         fill={scenarios.pessimistic.color}
                         textAnchor="middle"
                       >
-                        £{(lineData[hoveredPoint].pessimisticValue / 1000).toFixed(0)}k
+                        {formatValue(lineData[hoveredPoint].pessimisticValue)}
                       </SvgText>
                       
                       <SvgText
@@ -545,7 +565,7 @@ export function GrowthProjectionsChart({
                         fill={scenarios.average.color}
                         textAnchor="middle"
                       >
-                        £{(lineData[hoveredPoint].averageValue / 1000).toFixed(0)}k
+                        {formatValue(lineData[hoveredPoint].averageValue)}
                       </SvgText>
                       
                       <SvgText
@@ -556,7 +576,7 @@ export function GrowthProjectionsChart({
                         fill={scenarios.outperform.color}
                         textAnchor="middle"
                       >
-                        £{(lineData[hoveredPoint].outperformValue / 1000).toFixed(0)}k
+                        {formatValue(lineData[hoveredPoint].outperformValue)}
                       </SvgText>
                     </>
                   )}
@@ -599,7 +619,7 @@ export function GrowthProjectionsChart({
                   <View style={[styles.tooltipDot, { backgroundColor: scenarios.pessimistic.color }]} />
                   <Text style={styles.tooltipLabel}>Pessimistic:</Text>
                   <Text style={styles.tooltipValue}>
-                    £{lineData[hoveredPoint].pessimisticValue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                    {lineData[hoveredPoint].pessimisticValue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
                   </Text>
                 </View>
                 <View style={styles.tooltipRow}>
@@ -645,7 +665,7 @@ export function GrowthProjectionsChart({
                     selectedScenario === key && styles.selectedLegendValue
                   ]}>
                     {balanceVisible 
-                      ? `£${(finalProjections[key as keyof typeof finalProjections] / 1000).toFixed(0)}k`
+                      ? formatValue(finalProjections[key as keyof typeof finalProjections])
                       : '••••'
                     }
                   </Text>
