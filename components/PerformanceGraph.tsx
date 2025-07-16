@@ -33,10 +33,10 @@ export function PerformanceGraph({ data, accountType, balanceVisible }: Performa
   const calculateGraphDimensions = () => {
     const { width: screenWidth } = screenData;
     
-    // Reduced Y-axis width and increased left margin for better centering
-    const yAxisWidth = 15; // Reduced from 20
+    // Increased Y-axis width to accommodate percentage values properly
+    const yAxisWidth = 35; // Increased from 15 to 35
     const containerHorizontalPadding = 40;
-    const leftMargin = 30; // Increased left margin to shift graph right
+    const leftMargin = 10; // Reduced left margin since Y-axis is wider now
     const rightMargin = 20; // Slightly increased right margin
     
     // Calculate maximum available width for the graph
@@ -85,7 +85,7 @@ export function PerformanceGraph({ data, accountType, balanceVisible }: Performa
   const minValue = Math.min(...allValues, 0);
   const maxValue = Math.max(...allValues, 0);
   
-  // Create simplified Y-axis with round numbers in 10% increments
+  // Create simplified Y-axis with round numbers in appropriate increments
   const createSimplifiedYAxis = () => {
     const roundedMin = Math.floor(minValue / 10) * 10;
     const roundedMax = Math.ceil(maxValue / 10) * 10;
@@ -95,7 +95,9 @@ export function PerformanceGraph({ data, accountType, balanceVisible }: Performa
     const adjustedMax = adjustedMin + range;
     
     const gridValues = [];
-    for (let value = adjustedMin; value <= adjustedMax; value += 10) {
+    // Use fewer grid lines to prevent overcrowding
+    const increment = Math.max(10, Math.ceil(range / 4 / 10) * 10);
+    for (let value = adjustedMin; value <= adjustedMax; value += increment) {
       gridValues.push(value);
     }
     
@@ -338,11 +340,16 @@ export function PerformanceGraph({ data, accountType, balanceVisible }: Performa
                     { 
                       top: line.y - 6,
                       fontSize: getFontSize('axis'),
-                      fontWeight: '500'
+                      fontWeight: '500',
+                      width: yAxisWidth - 2, // Use full width minus small margin
+                      textAlign: 'right',
                     }
                   ]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit={true}
+                  minimumFontScale={0.8}
                 >
-                  <Text>{line.value}%</Text>
+                  {line.value}%
                 </Text>
               ))}
             </View>
