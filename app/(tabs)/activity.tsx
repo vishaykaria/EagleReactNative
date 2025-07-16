@@ -301,30 +301,6 @@ export default function ActivityScreen() {
         </PageTransition>
       </Animated.View>
 
-      {/* Search Bar */}
-      {searchVisible && (
-        <PageTransition isVisible={searchVisible} duration={200}>
-          <View style={styles.searchContainer}>
-            <View style={styles.searchInputContainer}>
-              <Search size={20} color="#64748B" style={styles.searchIcon} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search transactions..."
-                placeholderTextColor="#94A3B8"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoFocus={true}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-                  <X size={20} color="#64748B" />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        </PageTransition>
-      )}
-
       <Animated.ScrollView 
         showsVerticalScrollIndicator={false}
         onScroll={Animated.event(
@@ -386,6 +362,30 @@ export default function ActivityScreen() {
             ))}
           </ScrollView>
         </PageTransition>
+
+        {/* Search Bar */}
+        {searchVisible && (
+          <PageTransition isVisible={searchVisible} duration={200}>
+            <View style={styles.searchContainer}>
+              <View style={styles.searchInputContainer}>
+                <Search size={20} color="#64748B" style={styles.searchIcon} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search transactions..."
+                  placeholderTextColor="#94A3B8"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  autoFocus={true}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                    <X size={20} color="#64748B" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </PageTransition>
+        )}
 
         {/* Search Results Info */}
         {searchQuery.trim() && (
