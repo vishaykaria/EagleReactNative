@@ -788,8 +788,9 @@ const styles = StyleSheet.create({
     elevation: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    minWidth: 220,
+    maxWidth: '95%',
     alignSelf: 'center',
-    maxWidth: '90%',
   },
   tooltipYear: {
     fontFamily: 'Inter-SemiBold',
@@ -800,27 +801,33 @@ const styles = StyleSheet.create({
   },
   tooltipScenarios: {
     gap: 8,
+    minWidth: 200,
   },
   tooltipRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    minWidth: 200,
   },
   tooltipDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
+    flexShrink: 0,
   },
   tooltipLabel: {
     fontFamily: 'Inter-Regular',
     fontSize: 12,
     color: '#64748B',
-    flex: 1,
+    minWidth: 80,
+    flexShrink: 0,
   },
   tooltipValue: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 12,
     color: '#0F172A',
+    flex: 1,
+    textAlign: 'right',
   },
   // Updated legend styles for vertical layout with integrated values
   legend: {

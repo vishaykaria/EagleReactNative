@@ -787,7 +787,8 @@ const styles = StyleSheet.create({
     elevation: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    minWidth: 120, // Reduced from 140 for 160px container
+    minWidth: 140,
+    maxWidth: 180,
     alignItems: 'center',
     zIndex: 1000,
   },
@@ -796,17 +797,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0F172A',
     marginBottom: 4,
+    textAlign: 'center',
+    width: '100%',
   },
   tooltipPercentage: {
     fontFamily: 'Inter-Bold',
     fontSize: 16,
     color: '#1E40AF',
     marginBottom: 2,
+    textAlign: 'center',
+    width: '100%',
   },
   tooltipValue: {
     fontFamily: 'Inter-Regular',
     fontSize: 12,
     color: '#64748B',
+    textAlign: 'center',
+    width: '100%',
   },
   compactLegend: {
     flexDirection: 'row',
