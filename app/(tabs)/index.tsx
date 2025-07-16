@@ -284,12 +284,12 @@ export default function HomeScreen() {
         Animated.timing(prevAnimations.opacity, {
           toValue: 0,
           duration: 300,
-          useNativeDriver: true, // Opacity can use native driver
+          useNativeDriver: false, // Keep consistent with height animation
         }),
         Animated.timing(prevAnimations.chevronRotation, {
           toValue: 0,
           duration: 300,
-          useNativeDriver: true, // Transform can use native driver
+          useNativeDriver: false, // Keep consistent with other animations
         }),
       ]).start();
     }
@@ -306,15 +306,16 @@ export default function HomeScreen() {
         Animated.timing(animations.opacity, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: true, // Opacity can use native driver
+          useNativeDriver: false, // Keep consistent with height animation
         }),
         Animated.timing(animations.chevronRotation, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: true, // Transform can use native driver
+          useNativeDriver: false, // Keep consistent with other animations
         }),
       ]).start();
     } else {
+      setExpandedIrsForm(null);
       // Collapse IRS forms accordion
       Animated.parallel([
         Animated.timing(animations.height, {
@@ -325,17 +326,14 @@ export default function HomeScreen() {
         Animated.timing(animations.opacity, {
           toValue: 0,
           duration: 300,
-          useNativeDriver: true, // Opacity can use native driver
+          useNativeDriver: false, // Keep consistent with height animation
         }),
         Animated.timing(animations.chevronRotation, {
           toValue: 0,
           duration: 300,
-          useNativeDriver: true, // Transform can use native driver
+          useNativeDriver: false, // Keep consistent with other animations
         }),
-      ]).start(() => {
-        // Only set to null after animation completes to prevent visual glitches
-        setExpandedIrsForm(null);
-      });
+      ]).start();
     }
   };
 
