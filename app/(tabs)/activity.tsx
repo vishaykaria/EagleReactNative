@@ -8,6 +8,7 @@ import { useFocusEffect } from 'expo-router';
 export default function ActivityScreen() {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchVisible, setSearchVisible] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -229,7 +230,10 @@ export default function ActivityScreen() {
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
   const toggleSearch = () => {
-    setSearchQuery('');
+    setSearchVisible(!searchVisible);
+    if (searchVisible) {
+      setSearchQuery('');
+    }
   };
 
   const clearSearch = () => {
@@ -281,14 +285,12 @@ export default function ActivityScreen() {
         </PageTransition>
         <PageTransition isVisible={isVisible} delay={100}>
           <View style={styles.headerActions}>
-            {searchQuery.length > 0 && (
-              <TouchableOpacity 
-                style={styles.resetButton}
-                onPress={toggleSearch}
-              >
-                <X size={16} color="#EF4444" />
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity 
+              style={[styles.headerButton, searchVisible && styles.headerButtonActive]}
+              onPress={toggleSearch}
+            >
+              <Search size={20} color={searchVisible ? "#1E40AF" : "#64748B"} />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.headerButton}>
               <Calendar size={20} color="#64748B" />
             </TouchableOpacity>
@@ -298,6 +300,30 @@ export default function ActivityScreen() {
           </View>
         </PageTransition>
       </Animated.View>
+
+      {/* Search Bar */}
+      {searchVisible && (
+        <PageTransition isVisible={searchVisible} duration={200}>
+          <View style={styles.searchContainer}>
+            <View style={styles.searchInputContainer}>
+              <Search size={20} color="#64748B" style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search transactions..."
+                placeholderTextColor="#94A3B8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoFocus={true}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                  <X size={20} color="#64748B" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </PageTransition>
+      )}
 
       <Animated.ScrollView 
         showsVerticalScrollIndicator={false}
@@ -361,30 +387,9 @@ export default function ActivityScreen() {
           </ScrollView>
         </PageTransition>
 
-        {/* Search Bar */}
-        <PageTransition isVisible={isVisible} delay={300}>
-          <View style={styles.searchContainer}>
-            <View style={styles.searchInputContainer}>
-              <Search size={20} color="#64748B" style={styles.searchIcon} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search transactions..."
-                placeholderTextColor="#94A3B8"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-                  <X size={20} color="#64748B" />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        </PageTransition>
-
         {/* Search Results Info */}
         {searchQuery.trim() && (
-          <PageTransition isVisible={!!searchQuery.trim()} delay={350}>
+          <PageTransition isVisible={!!searchQuery.trim()} delay={0}>
             <View style={styles.searchResultsInfo}>
               <Text style={styles.searchResultsText}>
                 {filteredTransactions.length} result{filteredTransactions.length !== 1 ? 's' : ''} for "{searchQuery}"
@@ -463,7 +468,7 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 24,
   },
   searchInputContainer: {
     flexDirection: 'row',
@@ -472,6 +477,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -488,14 +494,6 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 4,
-  },
-  resetButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FEE2E2',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   searchResultsInfo: {
     paddingHorizontal: 20,
