@@ -8,7 +8,6 @@ import { useFocusEffect } from 'expo-router';
 export default function ActivityScreen() {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchVisible, setSearchVisible] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -229,13 +228,6 @@ export default function ActivityScreen() {
     .filter(t => t.type === 'debit')
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  const toggleSearch = () => {
-    setSearchVisible(!searchVisible);
-    if (searchVisible) {
-      setSearchQuery('');
-    }
-  };
-
   const clearSearch = () => {
     setSearchQuery('');
   };
@@ -285,12 +277,6 @@ export default function ActivityScreen() {
         </PageTransition>
         <PageTransition isVisible={isVisible} delay={100}>
           <View style={styles.headerActions}>
-            <TouchableOpacity 
-              style={[styles.headerButton, searchVisible && styles.headerButtonActive]}
-              onPress={toggleSearch}
-            >
-              <Search size={20} color={searchVisible ? "#1E40AF" : "#64748B"} />
-            </TouchableOpacity>
             <TouchableOpacity style={styles.headerButton}>
               <Calendar size={20} color="#64748B" />
             </TouchableOpacity>
@@ -300,30 +286,6 @@ export default function ActivityScreen() {
           </View>
         </PageTransition>
       </Animated.View>
-
-      {/* Search Bar */}
-      {searchVisible && (
-        <PageTransition isVisible={searchVisible} duration={200}>
-          <View style={styles.searchContainer}>
-            <View style={styles.searchInputContainer}>
-              <Search size={20} color="#64748B" style={styles.searchIcon} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search transactions..."
-                placeholderTextColor="#94A3B8"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoFocus={true}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-                  <X size={20} color="#64748B" />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        </PageTransition>
-      )}
 
       <Animated.ScrollView 
         showsVerticalScrollIndicator={false}
@@ -359,8 +321,29 @@ export default function ActivityScreen() {
           </PageTransition>
         </View>
 
+        {/* Permanent Search Bar */}
+        <PageTransition isVisible={isVisible} delay={300}>
+          <View style={styles.searchContainer}>
+            <View style={styles.searchInputContainer}>
+              <Search size={20} color="#64748B" style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search transactions..."
+                placeholderTextColor="#94A3B8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                  <X size={20} color="#64748B" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </PageTransition>
+
         {/* Filter Tabs */}
-        <PageTransition isVisible={isVisible} delay={250}>
+        <PageTransition isVisible={isVisible} delay={350}>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -389,7 +372,7 @@ export default function ActivityScreen() {
 
         {/* Search Results Info */}
         {searchQuery.trim() && (
-          <PageTransition isVisible={!!searchQuery.trim()} delay={0}>
+          <PageTransition isVisible={!!searchQuery.trim()} delay={400}>
             <View style={styles.searchResultsInfo}>
               <Text style={styles.searchResultsText}>
                 {filteredTransactions.length} result{filteredTransactions.length !== 1 ? 's' : ''} for "{searchQuery}"
@@ -402,10 +385,10 @@ export default function ActivityScreen() {
         <View style={styles.transactionsList}>
           {filteredTransactions.length > 0 ? (
             filteredTransactions.map((transaction, index) => (
-              <TransactionItem key={transaction.id} transaction={transaction} index={index} />
+              <TransactionItem key={transaction.id} transaction={transaction} index={450 + (index * 30)} />
             ))
           ) : (
-            <PageTransition isVisible={isVisible} delay={400}>
+            <PageTransition isVisible={isVisible} delay={500}>
               <View style={styles.emptyState}>
                 <Search size={48} color="#94A3B8" />
                 <Text style={styles.emptyStateTitle}>No transactions found</Text>
