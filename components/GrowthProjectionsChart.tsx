@@ -585,16 +585,13 @@ export function GrowthProjectionsChart({
               
               {/* Year labels - same as PerformanceGraph */}
               <View style={styles.xAxisLabels}>
-                {lineData.filter((_, index) => {
-                  const step = Math.ceil(lineData.length / 6);
-                  return index % step === 0 || index === lineData.length - 1;
-                }).map((point, index) => (
+                {lineData.filter((_, index) => index % Math.ceil(lineData.length / 6) === 0).map((point, index) => (
                   <Text 
                     key={`year-${index}`}
                     style={[
                       styles.yearLabel, 
                       { 
-                        left: Math.max(0, Math.min(point.x - 20, GRAPH_WIDTH - 40)),
+                        left: point.x - 20,
                         top: GRAPH_HEIGHT + 16,
                         fontSize: getFontSize('year'),
                         fontWeight: hoveredPoint === index ? '700' : '600',
