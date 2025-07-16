@@ -511,14 +511,14 @@ export function PerformanceGraph({ data, accountType, balanceVisible }: Performa
                 <View style={[styles.tooltipDot, { backgroundColor: accountColor }]} />
                 <Text style={styles.tooltipLabel}>{getPortfolioLabel()}:</Text>
                 <Text style={[styles.tooltipValue, { color: lineData[hoveredPoint].portfolioValue >= 0 ? '#10B981' : '#EF4444' }]}>
-                  <Text>{lineData[hoveredPoint].portfolioValue >= 0 ? '+' : ''}{lineData[hoveredPoint].portfolioValue.toFixed(1)}%</Text>
+                  {lineData[hoveredPoint].portfolioValue >= 0 ? '+' : ''}{lineData[hoveredPoint].portfolioValue.toFixed(1)}%
                 </Text>
               </View>
               <View style={styles.tooltipRow}>
                 <View style={[styles.tooltipDot, { backgroundColor: '#94A3B8' }]} />
                 <Text style={styles.tooltipLabel}>VWRL:</Text>
                 <Text style={[styles.tooltipValue, { color: lineData[hoveredPoint].benchmarkValue >= 0 ? '#10B981' : '#EF4444' }]}>
-                  <Text>{lineData[hoveredPoint].benchmarkValue >= 0 ? '+' : ''}{lineData[hoveredPoint].benchmarkValue.toFixed(1)}%</Text>
+                  {lineData[hoveredPoint].benchmarkValue >= 0 ? '+' : ''}{lineData[hoveredPoint].benchmarkValue.toFixed(1)}%
                 </Text>
               </View>
             </View>
